@@ -19,9 +19,6 @@ void setup() {
     while (true);
   }
 
-  // Optional: Set sync word to make sure devices are talking to each other
-  LoRa.setSyncWord(0xF3);
-  
   Serial.println("LoRa Receiver Ready.");
   Serial.println("Waiting for messages...");
 }
@@ -31,14 +28,11 @@ void loop() {
 
   if (packetSize) {
     Serial.println("----- PACKET RECEIVED -----");
-    Serial.print("Packet size: ");
-    Serial.println(packetSize);
 
     // Read packet
     String received = "";
     while (LoRa.available()) {
-      char c = (char)LoRa.read();
-      received += c;
+      received += (char)LoRa.read();
     }
 
     // Print received message
@@ -51,7 +45,4 @@ void loop() {
 
     Serial.println("---------------------------");
   }
-  
-  // Small delay to prevent overwhelming the serial output
-  delay(10);
 }
