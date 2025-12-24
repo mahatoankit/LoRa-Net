@@ -1,68 +1,49 @@
+
 #include <SPI.h>
 #include <LoRa.h>
 
-// Pin mapping for ESP8266
-#define LORA_SS    15   // D8
-#define LORA_RST   16   // D0
-#define LORA_DIO0  5    // D1
+//define the pins used by the transceiver module
+#define ss 5
+#define rst 14
+#define dio0 2
+
+int counter = 0;
 
 void setup() {
+  //initialize Serial Monitor
   Serial.begin(115200);
-  while(!Serial); // Wait for serial port
-  delay(1000);
-  
-  Serial.println();
-  Serial.println("LoRa Transmitter Initializing...");
+  while (!Serial);
+  Serial.println("LoRa Sender");
 
-  // Initialize SPI
-  SPI.begin();
+  //setup LoRa transceiver module
+  LoRa.setPins(ss, rst, dio0);
   
-  // Set LoRa pins
-  LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
-
-  // Try to initialize LoRa
-  Serial.println("Starting LoRa...");
-  if (!LoRa.begin(433E6)) {
-    Serial.println("LoRa init FAILED!");
-    Serial.println("Check wiring:");
-    Serial.println("  NSS  -> D8 (GPIO15)");
-    Serial.println("  RST  -> D0 (GPIO16)");
-    Serial.println("  DIO0 -> D1 (GPIO5)");
-    while (true) {
-      delay(1000);
-    }
+  //replace the LoRa.begin(---E-) argument with your location's frequency 
+  //433E6 for Asia
+  //868E6 for Europe
+  //915E6 for North America
+  while (!LoRa.begin(868E6)) {
+    Serial.println(".");
+    delay(500);
   }
-
-  Serial.println("LoRa OK!");
-  
-  // Configure LoRa
-  LoRa.setTxPower(20);
-  LoRa.setSpreadingFactor(7);
-  LoRa.setSignalBandwidth(125E3);
+   // Change sync word (0xF3) to match the receiver
+  // The sync word assures you don't get LoRa messages from other LoRa transceivers
+  // ranges from 0-0xFF
   LoRa.setSyncWord(0xF3);
-  
-  Serial.println("Ready to send messages!");
-  Serial.println("Type your message and press Enter:");
+  Serial.println("LoRa Initializing OK!");
 }
 
-void loop() { 
-  // Check if data available on serial
-  if (Serial.available() > 0) {
-    String message = Serial.readStringUntil('\n');
-    message.trim(); // Remove whitespace
-    
-    if (message.length() > 0) {
-      Serial.println("---");
-      Serial.print("TX: ");
-      Serial.println(message);
-      
-      // Send via LoRa
-      LoRa.beginPacket();
-      LoRa.print(message);
-      LoRa.endPacket();
-      
-      Serial.println("Sent!");
-      Serial.println("---");
-    }
-  }
+void loop() {
+  Serial.print("Sending packet: ");
+  Serial.println(counter);
+
+  //Send LoRa packet to receiver
+  LoRa.beginPacket();
+  LoRa.print("hello ");
+  LoRa.print(counter);
+  LoRa.endPacket();
+
+  counter++;
+
+  delay(10000);
 }
