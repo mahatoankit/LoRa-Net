@@ -22,7 +22,7 @@ void setup() {
   Serial.println("LoRa Initialized Successfully.");
 }
 
-void loop() {
+void loop() { 
   String payload = "Test Packet from ESP8266";
 
   Serial.print("Sending: ");
