@@ -1,17 +1,20 @@
-# Core dependencies
-numpy>=1.21.0
-tensorflow>=2.10.0
-scikit-learn>=1.0.0
-joblib>=1.0.0
 
-# Audio processing
-sounddevice>=0.4.0
-scipy>=1.7.0
+numpy>=1.21.0,<2.0.0              # Numerical computing and array operations
+tensorflow>=2.10.0,<2.16.0        # Deep learning framework for inference
+tensorflow-hub>=0.12.0,<0.17.0    # Pre-trained models (YamNet)
+scikit-learn>=1.0.0,<1.4.0        # Machine learning utilities
+joblib>=1.0.0,<1.4.0              # Model persistence and caching
 
-# Serial communication
-pyserial>=3.5
 
-# Optional: for web dashboard
-# websockets>=10.0
-# fastapi>=0.95.0
-# uvicorn>=0.20.0
+sounddevice>=0.4.0,<0.5.0 
+scipy>=1.7.0,<1.12.0         
+
+pyserial>=3.5,<4.0         
+pynmea2>=1.18.0,<2.0.0           
+
+fastapi>=0.110.0,<1.0.0   
+uvicorn[standard]>=0.29.0,<1.0.0 
+websockets>=12.0,<13.0           
+
+# python-multipart>=0.0.6         # For file uploads in FastAPI
+# aiofiles>=23.0.0                # Async file operations
