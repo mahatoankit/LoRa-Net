@@ -1,5 +1,5 @@
 // ================================
-// ESP8266 LoRa TRANSMITTER (STABLE)
+// ESP8266 LoRa RECEIVER (STABLE)
 // ================================
 
 #include <Arduino.h>
@@ -15,21 +15,18 @@
 #define LORA_FREQ 433E6
 #define SPREADING_FACTOR 7
 #define SIGNAL_BANDWIDTH 125E3
-#define TX_POWER 17
 
 #define LED_PIN LED_BUILTIN
 #define SERIAL_BAUD 115200
 
-unsigned long counter = 0;
-
 void setup() {
   Serial.begin(SERIAL_BAUD);
-  delay(200);
+  delay(200); // ESP8266-safe Serial startup
 
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);
 
-  Serial.println("\n[TX] Booting Transmitter...");
+  Serial.println("\n[RX] Booting Receiver...");
 
   SPI.begin(D5, D6, D7, LORA_SS);
 
@@ -42,7 +39,7 @@ void setup() {
   LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
 
   if (!LoRa.begin(LORA_FREQ)) {
-    Serial.println("[TX] LoRa init FAILED");
+    Serial.println("[RX] LoRa init FAILED");
     while (1) {
       digitalWrite(LED_PIN, LOW);
       delay(100);
@@ -53,30 +50,35 @@ void setup() {
 
   LoRa.setSpreadingFactor(SPREADING_FACTOR);
   LoRa.setSignalBandwidth(SIGNAL_BANDWIDTH);
-  LoRa.setTxPower(TX_POWER);
   LoRa.enableCrc();
 
-  Serial.println("[TX] LoRa Ready @ 433 MHz");
+  Serial.println("[RX] LoRa Ready @ 433 MHz");
+  Serial.println("[RX] Waiting for packets...");
 }
 
 void loop() {
+  int packetSize = LoRa.parsePacket();
+  if (!packetSize) return;
+
   digitalWrite(LED_PIN, LOW);
 
-  char payload[128];
-  snprintf(
-    payload,
-    sizeof(payload),
-    "EVT:TEST;CONF:1.00;NODE:1;SEQ:%lu",
-    counter++
-  );
+  char buffer[256];
+  int i = 0;
 
-  Serial.print("[TX] Sending: ");
-  Serial.println(payload);
+  while (LoRa.available() && i < 255) {
+    buffer[i++] = (char)LoRa.read();
+  }
+  buffer[i] = '\0';
 
-  LoRa.beginPacket();
-  LoRa.print(payload);
-  LoRa.endPacket();
+  int rssi = LoRa.packetRssi();
+  float snr = LoRa.packetSnr();
+
+  Serial.print("DATA:");
+  Serial.print(buffer);
+  Serial.print(";RSSI:");
+  Serial.print(rssi);
+  Serial.print(";SNR:");
+  Serial.println(snr, 1);
 
   digitalWrite(LED_PIN, HIGH);
-  delay(2000);
 }
