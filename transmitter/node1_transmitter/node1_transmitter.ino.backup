@@ -1,6 +1,171 @@
 /*
  * Node 1 ESP8266 Transmitter (IMPROVED VERSION)
- * 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- Power supply specs- LoRa module model number- Photos of your wiring- Serial Monitor output**Still having issues?** Open an issue with:---4. Check [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for detailed help3. If still failing, run `lora_diagnostic.ino`2. Upload the updated `node1_transmitter.ino`1. Update your wiring: Move NSS from **D8 → D4**## Next Steps- ✅ Powered USB hub or 5V/2A adapter- ✅ Breadboard (good quality)- ✅ Quality jumper wires- ✅ Antenna (helical or wire 1/4 wave)- ✅ 100nF ceramic capacitor- ✅ 100µF electrolytic capacitor- ✅ 3.3V LDO regulator (AMS1117-3.3)- ✅ LoRa RA-02 module (correct frequency)If you need to upgrade your setup:## Hardware Shopping List| Initialization timeout | Wrong frequency module || No transmission | Antenna not connected || Intermittent failures | Poor power supply, add capacitor || Boot loop | GPIO15 issue, use D4 instead of D8 || Module not detected | Check power, try different NSS pin ||---------|----------|| Problem | Solution |## Common Issues & Quick Fixes   - Upload and test   - Add retry logic (already in updated sketch)   - Change `#define LORA_SS D8` to `D4`4. **Update Your Code**   - Check initialization messages   - Open Serial Monitor (115200 baud)   - Use `lora_diagnostic.ino`3. **Upload Diagnostic Sketch**   - No shorts between VCC and GND   - Check GND continuity   - Measure VCC with multimeter = 3.3V2. **Power Test**   - Antenna attached   - No crossed wires   - All wires connected1. **Visual Check**## Testing Sequence```     Add 100µF capacitor between VCC & GND     Power: 3.3V @ 150mA minimum                                        [ANT] ← Connect antenna!     [D2]    ─────────────────────────► [DIO0]     [D0]    ─────────────────────────► [RST]     [D4]    ─────────────────────────► [NSS]  ← Changed!     [D5]    ─────────────────────────► [SCK]     [D6]    ─────────────────────────► [MISO]     [D7]    ─────────────────────────► [MOSI]     [GND]   ─────────────────────────► [GND]     [3.3V]  ─────────────────────────► [VCC]          ESP8266 NodeMCU                    LoRa RA-02```## Visual Breadboard Layout```  - Use wrong frequency antenna  - Transmit without antenna (damages module!)❌ Never:  - Proper orientation (vertical)  - Options: helical, wire (1/4 wave = 17.3cm for 433MHz)  - Must have antenna connected!✅ Required:```### 3. **Antenna**```  - Mixed wire gauges  - Bent module pins  - Damaged breadboard rows  - Loose jumper wires❌ Poor connections:  - Secure breadboard connections  - Keep wires short (<15cm)  - Use quality jumper wires  - Solder wires to module pins✅ Good connections:```### 2. **Connection Quality**```  - Use long thin wires for power  - Use 5V (will damage module!)  - Power from ESP8266's 3.3V pin (insufficient current)❌ DON'T:  - Powered USB hub or wall adapter  - Use thick/short power wires  - Add 100µF capacitor near LoRa VCC/GND  - Use dedicated 3.3V power supply✅ DO:```### 1. **Power Supply** (Most Critical!)## Physical Connection Tips```DIO0    → D2 (GPIO4)RST     → D0 (GPIO16)NSS/CS  → D3 (GPIO0)  [⚠️ Must be HIGH during boot]```#### Configuration 3:```DIO0    → D2 (GPIO4)RST     → D0 (GPIO16)NSS/CS  → D1 (GPIO5)```#### Configuration 2:If D4 doesn't work, try these alternatives:### Alternative Configurations- **D4 (GPIO2)** is a better choice for NSS pin- Using it as NSS can cause boot failures- GPIO15 must be pulled LOW during ESP8266 boot**GPIO15 (D8) Boot Issue:**### Why D4 instead of D8?```ANT                    →   Antenna (required!)DIO0                   →   D2 (GPIO4)RST                    →   D0 (GPIO16)NSS/CS                 →   D4 (GPIO2)  ✅ CHANGED FROM D8SCK                    →   D5 (GPIO14)MISO                   →   D6 (GPIO12)MOSI                   →   D7 (GPIO13)GND                    →   GNDVCC                    →   3.3V (⚠️ NOT 5V!)=============================================LoRa RA-02 Module          ESP8266 NodeMCU```### Recommended Configuration (Updated)## Pin Connections for ESP8266 NodeMCU * 
  * Reads alert data from laptop via Serial (115200 baud)
  * Transmits alert packets via LoRa (433 MHz)
  * 
@@ -54,7 +219,9 @@ unsigned long packetCount = 0;
 void setup() {
   // Initialize Serial
   Serial.begin(SERIAL_BAUD);
-  delay(2000); // Give time for serial to stabilize
+  while (!Serial) {
+    delay(10);
+  }
   
   // Initialize LED
   pinMode(LED_PIN, OUTPUT);
@@ -82,7 +249,6 @@ void setup() {
   
   // Initialize LoRa with improved error handling
   SPI.begin();
-  Serial.println("[OK] SPI initialized");
   
   // Manual reset sequence for better reliability
   pinMode(LORA_RST, OUTPUT);
@@ -90,7 +256,6 @@ void setup() {
   delay(10);
   digitalWrite(LORA_RST, HIGH);
   delay(10);
-  Serial.println("[OK] LoRa reset complete");
   
   LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
   
@@ -114,7 +279,6 @@ void setup() {
     Serial.print("/");
     Serial.println(MAX_RETRIES);
     delay(500);
-    yield(); // Feed watchdog timer
   }
   
   if (!loraInitialized) {
@@ -137,7 +301,6 @@ void setup() {
       delay(100);
       digitalWrite(LED_PIN, HIGH);
       delay(100);
-      yield(); // Feed watchdog timer
     }
   }
   
@@ -150,21 +313,19 @@ void setup() {
   LoRa.setTxPower(TX_POWER);
   LoRa.enableCrc(); // Enable CRC for error detection
   
-  Serial.println("LoRa Configuration:");
-  Serial.print("  Spreading Factor: SF");
+  Serial.println("[OK] LoRa initialized successfully!");
+  Serial.print("Spreading Factor: SF");
   Serial.println(SPREADING_FACTOR);
-  Serial.print("  Bandwidth: ");
+  Serial.print("Bandwidth: ");
   Serial.print(SIGNAL_BANDWIDTH / 1E3);
   Serial.println(" kHz");
-  Serial.print("  TX Power: ");
+  Serial.print("TX Power: ");
   Serial.print(TX_POWER);
   Serial.println(" dBm");
-  Serial.println("  CRC: Enabled");
   Serial.println();
   Serial.println("Waiting for alert data from laptop...");
   Serial.println("Expected format: EVT:TYPE;CONF:0.XX;LAT:XX.XX;LON:XX.XX;TS:XXXXXXX");
   Serial.println("=================================");
-  Serial.println();
   
   // Blink LED to indicate ready
   for (int i = 0; i < 3; i++) {
@@ -173,14 +334,9 @@ void setup() {
     digitalWrite(LED_PIN, HIGH);
     delay(200);
   }
-  
-  Serial.println("[READY] System initialized. Listening for serial data...");
 }
 
 void loop() {
-  // Feed watchdog timer
-  yield();
-  
   // Read data from Serial (laptop)
   while (Serial.available() > 0) {
     char c = Serial.read();
@@ -202,9 +358,6 @@ void loop() {
       }
     }
   }
-  
-  // Small delay to prevent tight loop
-  delay(10);
 }
 
 void processAndTransmit(String payload) {
@@ -247,7 +400,6 @@ void processAndTransmit(String payload) {
   Serial.print("Total packets sent: ");
   Serial.println(packetCount);
   Serial.println("--------------------------");
-  Serial.println();
 }
 
 bool validatePayload(String payload) {

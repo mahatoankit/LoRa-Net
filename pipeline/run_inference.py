@@ -36,9 +36,35 @@ try:
     use_tflite_classifier = True
     print("TFLite classifier loaded.")
 except:
-    # Fallback to Keras model
+    # Fallback to Keras model with compatibility handling
     from tensorflow.keras.models import load_model
-    keras_model = load_model('multi_class_audio_classifier.h5', compile=False)
+    import tensorflow.keras.backend as K
+    
+    # Try loading with custom options for backward compatibility
+    try:
+        # First attempt: standard load
+        keras_model = load_model('multi_class_audio_classifier.h5', compile=False)
+    except (TypeError, ValueError) as e:
+        print(f"Standard load failed ({e}), trying compatibility mode...")
+        # Second attempt: use safe_mode for newer TF versions
+        try:
+            keras_model = load_model('multi_class_audio_classifier.h5', compile=False, safe_mode=False)
+        except:
+            # Third attempt: load weights only into a new model architecture
+            print("Attempting to load weights only with correct architecture...")
+            from tensorflow.keras.models import Sequential
+            from tensorflow.keras.layers import Dense, Input
+            
+            # Correct architecture based on YamNet-Trainer.ipynb and model inspection
+            # Architecture: Input(1024) -> Dense(128, relu) -> Dense(64, relu) -> Dense(18, softmax)
+            keras_model = Sequential([
+                Input(shape=(1024,)),
+                Dense(128, activation='relu'),
+                Dense(64, activation='relu'),
+                Dense(len(label_binarizer.classes_), activation='softmax')
+            ])
+            keras_model.load_weights('multi_class_audio_classifier.h5')
+    
     use_tflite_classifier = False
     print("Keras Model Loaded Successfully.")
 

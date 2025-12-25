@@ -29,18 +29,18 @@ warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # -------- Configuration --------
-SERIAL_PORT = None  # Auto-detect or set to '/dev/ttyUSB0', 'COM3', etc.
+SERIAL_PORT = "/dev/ttyUSB0" # Auto-detect or set to '/dev/ttyUSB0', 'COM3', etc.
 SERIAL_BAUD = 115200
 ALERT_THRESHOLD = 0.6  # Minimum confidence to send alert
 GPS_LAT = 27.712623  # Default GPS coordinates (update with actual GPS module)
 GPS_LON = 85.342602
 NODE_ID = "NODE1"
-TEST_MODE = True  # Set to False when ESP8266 is connected
+TEST_MODE = False  # Set to False when ESP8266 is connected
 
 # Events that should trigger alerts (customize based on your model)
 ALERT_EVENTS = [
     "gunshot", "scream", "glass_break", "explosion", "chainsaw",
-    "AXE Chopping", "hand_saw"  # Add your dangerous/suspicious event classes
+    "AXE Chopping", "hand_saw"
 ]
 
 # -------- Global Variables --------

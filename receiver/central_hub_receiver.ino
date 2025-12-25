@@ -11,13 +11,15 @@
  * - ESP8266 (NodeMCU, Wemos D1 Mini, etc.)
  * - LoRa RA-02 (433 MHz)
  * 
- * Pin Connections:
- * LoRa NSS  -> D8 (GPIO15)
+ * Pin Connections (UPDATED):
+ * LoRa NSS  -> D4 (GPIO2)   [Changed from D8 to avoid GPIO15 boot issues]
  * LoRa RST  -> D0 (GPIO16)
  * LoRa DIO0 -> D2 (GPIO4)
- * LoRa SCK  -> D5 (GPIO14)
- * LoRa MISO -> D6 (GPIO12)
- * LoRa MOSI -> D7 (GPIO13)
+ * LoRa SCK  -> D5 (GPIO14)  [Hardware SPI]
+ * LoRa MISO -> D6 (GPIO12)  [Hardware SPI]
+ * LoRa MOSI -> D7 (GPIO13)  [Hardware SPI]
+ * 
+ * IMPORTANT: Use 3.3V for LoRa module, NOT 5V!
  */
 
 #include <Arduino.h>
@@ -25,7 +27,7 @@
 #include <LoRa.h>
 
 // -------- LoRa Configuration --------
-#define LORA_SS   D8    // NSS pin
+#define LORA_SS   D4    // NSS pin (was D8)
 #define LORA_RST  D0    // Reset pin
 #define LORA_DIO0 D2    // DIO0 pin
 #define LORA_FREQ 433E6 // 433 MHz (Must match transmitter)
@@ -60,24 +62,68 @@ void setup() {
   Serial.println("=================================");
   Serial.println("Central Hub - LoRa Receiver");
   Serial.println("=================================");
+  Serial.println();
+  Serial.println("Pin Configuration:");
+  Serial.print("  NSS/CS: D4 (GPIO");
+  Serial.print(LORA_SS);
+  Serial.println(")");
+  Serial.print("  RST:    D0 (GPIO");
+  Serial.print(LORA_RST);
+  Serial.println(")");
+  Serial.print("  DIO0:   D2 (GPIO");
+  Serial.print(LORA_DIO0);
+  Serial.println(")");
+  Serial.println("  MOSI:   D7 (GPIO13)");
+  Serial.println("  MISO:   D6 (GPIO12)");
+  Serial.println("  SCK:    D5 (GPIO14)");
+  Serial.println();
   
   // Initialize LoRa
   SPI.begin();
+  
+  // Manual reset sequence
+  pinMode(LORA_RST, OUTPUT);
+  digitalWrite(LORA_RST, LOW);
+  delay(10);
+  digitalWrite(LORA_RST, HIGH);
+  delay(10);
+  
   LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
   
   Serial.print("Initializing LoRa at ");
   Serial.print(LORA_FREQ / 1E6);
   Serial.println(" MHz...");
   
-  if (!LoRa.begin(LORA_FREQ)) {
+  // Try initialization with retry logic
+  int retries = 0;
+  const int MAX_RETRIES = 5;
+  bool loraInitialized = false;
+  
+  while (retries < MAX_RETRIES && !loraInitialized) {
+    if (LoRa.begin(LORA_FREQ)) {
+      loraInitialized = true;
+      break;
+    }
+    retries++;
+    Serial.print("Retry ");
+    Serial.print(retries);
+    Serial.print("/");
+    Serial.println(MAX_RETRIES);
+    delay(500);
+    yield();
+  }
+  
+  if (!loraInitialized) {
     Serial.println("[ERROR] LoRa initialization failed!");
     Serial.println("Check wiring and module.");
+    Serial.println("NSS should be on D4, not D8!");
     while (1) {
       // Blink LED rapidly to indicate error
       digitalWrite(LED_PIN, LOW);
       delay(100);
       digitalWrite(LED_PIN, HIGH);
       delay(100);
+      yield();
     }
   }
   
@@ -87,14 +133,18 @@ void setup() {
   LoRa.enableCrc(); // Enable CRC for error detection
   
   Serial.println("[OK] LoRa initialized successfully!");
-  Serial.print("Spreading Factor: SF");
+  Serial.println();
+  Serial.println("LoRa Configuration:");
+  Serial.print("  Spreading Factor: SF");
   Serial.println(SPREADING_FACTOR);
-  Serial.print("Bandwidth: ");
+  Serial.print("  Bandwidth: ");
   Serial.print(SIGNAL_BANDWIDTH / 1E3);
   Serial.println(" kHz");
+  Serial.println("  CRC: Enabled");
   Serial.println();
   Serial.println("Listening for incoming packets...");
   Serial.println("=================================");
+  Serial.println();
   
   // Blink LED to indicate ready
   for (int i = 0; i < 3; i++) {
@@ -108,6 +158,9 @@ void setup() {
 }
 
 void loop() {
+  // Feed watchdog timer
+  yield();
+  
   // Check for incoming LoRa packets
   int packetSize = LoRa.parsePacket();
   
