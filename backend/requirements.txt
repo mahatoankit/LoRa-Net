@@ -1,12 +1,6 @@
-# For the FastAPI server
-fastapi
-uvicorn
-
-# For the Pi client
-websockets
-
-# For the dashboard
-# (no Python requirements; runs in browser)
-fastapi>=0.110,<1.0
-uvicorn[standard]>=0.29,<1.0
-websockets>=12.0,<13.0
+Flask==3.0.0
+Flask-CORS==4.0.0
+Flask-SocketIO==5.3.5
+pyserial==3.5
+python-socketio==5.10.0
+eventlet==0.33.3
