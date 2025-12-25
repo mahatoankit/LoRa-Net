@@ -15,7 +15,7 @@ import serial
 import serial.tools.list_ports
 
 # Configuration
-
+SERIAL_PORT = "/dev/ttyUSB0"  # Update as needed
 SERIAL_BAUD = 9600
 MAX_EVENTS = 100  # Store last 100 events in memory
 
