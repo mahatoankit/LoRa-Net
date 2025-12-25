@@ -2,4 +2,9 @@
 /env
 *.log
 *.tmp
-.DS_Store   
+.DS_Store 
+
+/Forest_Datasets
+
+
+DOCS.md
