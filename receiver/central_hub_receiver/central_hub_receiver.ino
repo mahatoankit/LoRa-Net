@@ -1,35 +1,37 @@
-// ================================
-// ESP8266 LoRa RECEIVER (STABLE)
-// ================================
+// =======================================
+// ESP8266 LoRa RECEIVER (433 MHz) – FINAL
+// =======================================
 
 #include <Arduino.h>
 #include <SPI.h>
 #include <LoRa.h>
 
-// -------- Pins --------
-#define LORA_SS   D4
-#define LORA_RST  D0
-#define LORA_DIO0 D2
+// -------- LoRa Pins (ESP8266) --------
+#define LORA_SS   D4    // GPIO2
+#define LORA_RST  D0    // GPIO16
+#define LORA_DIO0 D2    // GPIO4
 
 // -------- LoRa Config --------
 #define LORA_FREQ 433E6
 #define SPREADING_FACTOR 7
 #define SIGNAL_BANDWIDTH 125E3
 
-#define LED_PIN LED_BUILTIN
 #define SERIAL_BAUD 115200
+#define LED_PIN LED_BUILTIN
 
 void setup() {
   Serial.begin(SERIAL_BAUD);
-  delay(200); // ESP8266-safe Serial startup
-
+  delay(200);               // IMPORTANT for ESP8266
+  
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);
 
-  Serial.println("\n[RX] Booting Receiver...");
+  Serial.println("\n[RX] Booting Central Hub Receiver");
 
-  SPI.begin(D5, D6, D7, LORA_SS);
+  // ESP8266 SPI → NO PIN ARGUMENTS
+  SPI.begin();
 
+  // Manual LoRa reset
   pinMode(LORA_RST, OUTPUT);
   digitalWrite(LORA_RST, LOW);
   delay(10);
@@ -52,7 +54,7 @@ void setup() {
   LoRa.setSignalBandwidth(SIGNAL_BANDWIDTH);
   LoRa.enableCrc();
 
-  Serial.println("[RX] LoRa Ready @ 433 MHz");
+  Serial.println("[RX] LoRa initialized successfully");
   Serial.println("[RX] Waiting for packets...");
 }
 

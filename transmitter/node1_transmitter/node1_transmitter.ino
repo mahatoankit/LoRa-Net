@@ -1,12 +1,12 @@
-// ================================
-// ESP8266 LoRa TRANSMITTER (STABLE)
-// ================================
+// =======================================
+// ESP8266 LoRa TRANSMITTER (433 MHz) – FINAL
+// =======================================
 
 #include <Arduino.h>
 #include <SPI.h>
 #include <LoRa.h>
 
-// -------- Pins --------
+// -------- LoRa Pins --------
 #define LORA_SS   D4
 #define LORA_RST  D0
 #define LORA_DIO0 D2
@@ -17,10 +17,10 @@
 #define SIGNAL_BANDWIDTH 125E3
 #define TX_POWER 17
 
-#define LED_PIN LED_BUILTIN
 #define SERIAL_BAUD 115200
+#define LED_PIN LED_BUILTIN
 
-unsigned long counter = 0;
+unsigned long seq = 0;
 
 void setup() {
   Serial.begin(SERIAL_BAUD);
@@ -29,10 +29,12 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);
 
-  Serial.println("\n[TX] Booting Transmitter...");
+  Serial.println("\n[TX] Booting Node Transmitter");
 
-  SPI.begin(D5, D6, D7, LORA_SS);
+  // ESP8266 SPI → NO PIN ARGUMENTS
+  SPI.begin();
 
+  // Manual LoRa reset
   pinMode(LORA_RST, OUTPUT);
   digitalWrite(LORA_RST, LOW);
   delay(10);
@@ -56,7 +58,7 @@ void setup() {
   LoRa.setTxPower(TX_POWER);
   LoRa.enableCrc();
 
-  Serial.println("[TX] LoRa Ready @ 433 MHz");
+  Serial.println("[TX] LoRa initialized successfully");
 }
 
 void loop() {
@@ -67,7 +69,7 @@ void loop() {
     payload,
     sizeof(payload),
     "EVT:TEST;CONF:1.00;NODE:1;SEQ:%lu",
-    counter++
+    seq++
   );
 
   Serial.print("[TX] Sending: ");
