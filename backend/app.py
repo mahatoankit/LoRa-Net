@@ -63,11 +63,11 @@ def serial_reader():
                     raw_data = ser.readline()
                     result = parse_packet(raw_data)
 
-                    print(result)
+                    print(result, "++")
 
                     if result.get("event"):
                         history.appendleft(result)
-                        print(result)
+                        print(result, "----")
                         socketio.emit('new_lora_event', result)
                     
                 time.sleep(.1)
