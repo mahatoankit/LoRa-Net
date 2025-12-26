@@ -259,8 +259,6 @@
                 <th>Confidence</th>
                 <th>Node</th>
                 <th>Location</th>
-                <th>RSSI</th>
-                <th>SNR</th>
               </tr>
             </thead>
             <tbody id="historyTableBody">
@@ -298,6 +296,8 @@
 
       // Listen for new LoRa events
       socket.on("new_lora_event", (data) => {
+        console.log("asdasd");
+
         console.log("New event received:", data);
         updateLatestEvent(data);
         eventHistory.unshift(data);
@@ -362,14 +362,6 @@
                         <div class="detail-value">${event.lat.toFixed(
                           4
                         )}, ${event.lon.toFixed(4)}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">RSSI</div>
-                        <div class="detail-value">${event.rssi} dBm</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">SNR</div>
-                        <div class="detail-value">${event.snr} dB</div>
                     </div>
                     <div class="detail-item" style="grid-column: span 2;">
                         <div class="detail-label">Google Maps</div>
