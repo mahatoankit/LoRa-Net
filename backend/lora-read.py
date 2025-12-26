@@ -44,6 +44,7 @@ def parse_packet(raw_line):
     except ValueError as e:
         print(f"[!] Data conversion error: {e}")
         return None
+    
     except Exception as e:
         print(f"[!] Parsing error: {e}")
         return None
@@ -89,6 +90,34 @@ def main_loop():
             if ser: 
                 ser.close()
             break
+# def main_loop():
+#     import serial.tools.list_ports
+    
+#     # List all available ports to help you find the right one
+#     ports = list(serial.tools.list_ports.comports())
+#     print("--- Available Ports ---")
+#     for p in ports:
+#         print(f"Device: {p.device} - {p.description}")
+#     print("-----------------------")
 
+#     ser = None
+#     while True:
+#         try:
+#             if ser is None or not ser.is_open:
+#                 print(f"[*] Attempting to connect to {SERIAL_PORT}...")
+#                 ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+#                 print(f"[+] Connected successfully.")
+
+#             while True:
+#                 # Basic read to see if anything exists
+#                 if ser.in_waiting > 0:
+#                     raw = ser.read(ser.in_waiting)
+#                     print(f"Raw Data Received: {raw}")
+#                 time.sleep(0.1)
+
+#         except Exception as e:
+#             print(f"[!] System Error: {e}") # This will tell us the EXACT reason
+#             if ser: ser.close()
+#             time.sleep(RECONNECT_DELAY)
 if __name__ == "__main__":
     main_loop()
